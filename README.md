@@ -4,8 +4,8 @@ Simple and Straight Forward python script to automate guest parking at my apartm
 
 ```json
 {
-    "url_": "guests have to use this link to reserver parking spot",
-    "apt_": "the name of my aparment complex",
+    "url_": "guests have to use this link to reserve parking spot",
+    "apt_": "the name of my apartment complex",
     "apt_unit": "my apartment unit",
     "make_": "the make of the guest car, example: Fiat",
     "model_": "the model of the guest car, example: 500X",
