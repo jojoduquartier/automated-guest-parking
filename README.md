@@ -1,8 +1,8 @@
-# automated-guest-parking
+# Automating Guest Parking Registration
 
-Simple and Straight Forward python script to automate guest parking at my apartment. The `config.json` file added to `.gitignore` and has the following:
+Simple and Straight Forward python script to automate guest parking registration at my apartment. The `config.json` file added to `.gitignore` and has the following:
 
-```json
+``` json
 {
     "url_": "guests have to use this link to reserve parking spot",
     "apt_": "the name of my apartment complex",
@@ -17,3 +17,9 @@ Simple and Straight Forward python script to automate guest parking at my apartm
     "apt_owner_lname": "my last name"
 }
 ```
+
+It's late December 2020 and guests will be visiting (Holiday Season!). To make this parking registration app slightly more fun, I used [Gooey](https://github.com/chriskiehl/Gooey) to turn it into a real UI.
+
+Start | Finish
+----- | ------
+![Start](/images/landing.png) | ![Finish](/images/finish.png)
