@@ -1,7 +1,6 @@
 import json
 import time
 import gooey
-import argparse
 from selenium import webdriver
 
 
