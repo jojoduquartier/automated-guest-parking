@@ -1,6 +1,7 @@
 import json
 import time
 import gooey
+import pathlib
 from selenium import webdriver
 
 
@@ -94,7 +95,7 @@ def register_my_car(
 )
 def main():
     # bring in default guest data (the usual guest :) )
-    with open("config.json") as f:
+    with (pathlib.Path(__file__).parent / "config.json").open() as f:
         user_details = json.load(f)
 
     # simple helper to make sure I have nice names on the gui
