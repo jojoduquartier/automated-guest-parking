@@ -89,7 +89,23 @@ def register_my_car(
     return True, None
 
 
+def save_owner_config(**kwargs):
+    """
+    assumption all keys are present
+    """
+
+    url_ = kwargs["URL"]
+    apt_ = kwargs["Apartment"]
+    apt_unit = kwargs["Unit"]
+    apt_owner_fname = kwargs["First Name"]
+    apt_owner_lname = kwargs["Last Name"]
+
+    print(kwargs)
+    return None
+
+
 @gooey.Gooey(
+    tabbed_groups=True,
     program_name="Guest Parking Registration",
     program_description="Register your car for the guest parking spots"
 )
@@ -105,28 +121,64 @@ def main():
 
     # declare parser
     parser = gooey.GooeyParser(description="Automate Guest Parking")
-    group = parser.add_argument_group("Guest Information")
+    guest_group = parser.add_argument_group("Guest Information")
+    owner_group = parser.add_argument_group("Configure Tenant Information")
+
+    # owner info
+    owner_group.add_argument(
+        "-ul", "--URL",
+        help="Guest parking url",
+        action="store"
+    )
+
+    owner_group.add_argument(
+        "-au", "--Unit",
+        help="The apartment unit",
+        action="store"
+    )
+
+    owner_group.add_argument(
+        "-ofn", "--First Name",
+        help="The owner's first name",
+        action="store"
+    )
+
+    owner_group.add_argument(
+        "-oln", "--Last Name",
+        help="The owner's last name",
+        action="store"
+    )
+
+    owner_group.add_argument(
+        "-at", "--Apartment",
+        help="The apartment name",
+        action="store"
+    )
+
+    # we will need to save profiles. Have a blank profile on top
+    # if the blank profile is used, update the yaml file with it
+    # thinking about using a listbox for many guests, we could load existing and add to it
 
     # parse guest data
-    group.add_argument(
+    guest_group.add_argument(
         "-mk", "--Make",
         help="The guest car make",
         action="store",
         default=user_details["make_"]
     )
-    group.add_argument(
+    guest_group.add_argument(
         "-ml", "--Model",
         help="The guest car model",
         action="store",
         default=user_details["model_"]
     )
-    group.add_argument(
+    guest_group.add_argument(
         "-cl", "--Color",
         help="The guest car color",
         action="store",
         default=user_details["color_"]
     )
-    group.add_argument(
+    guest_group.add_argument(
         "-pl", "--Plate",
         help="The guest car plate",
         action="store",
@@ -138,7 +190,7 @@ def main():
             }
         }
     )
-    group.add_argument(
+    guest_group.add_argument(
         "-ph", "--Phone",
         help="The guest's phone number",
         action="store",
@@ -150,12 +202,15 @@ def main():
             }
         }
     )
-    group.add_argument(
+    guest_group.add_argument(
         "-em", "--Email",
         help="The guest's email",
         action="store",
         default=user_details["email_"]
     )
+
+    # owner config
+    owner_details = parser.parse_args()
 
     # update default config with user info
     details = parser.parse_args()
@@ -163,7 +218,8 @@ def main():
     user_details = {**user_details, **details}
 
     # run selenium portion
-    status, error = register_my_car(**user_details)
+    # status, error = register_my_car(**user_details)
+    status, error = True, None
     if status:
         print("Success! You should receive an email and text message now :)")
 
