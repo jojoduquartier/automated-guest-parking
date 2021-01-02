@@ -14,6 +14,7 @@ def register_my_car(
     apt_unit,
     apt_owner_fname,
     apt_owner_lname,
+    **kwargs,
 ):
     """
     Literally every step is spelled out but that is ok. Simple site.

@@ -1,8 +1,12 @@
 import json
 import yaml
 import gooey
+import typing
 import pathlib
 from registration import register_my_car
+
+# constant
+guest_path = pathlib.Path(__file__).parent / "guests.yml"
 
 
 def save_owner_config(**kwargs):
@@ -16,7 +20,9 @@ def save_owner_config(**kwargs):
     apt_owner_fname = kwargs["First Name"]
     apt_owner_lname = kwargs["Last Name"]
 
-    with (pathlib.Path(__file__).parent / "owner.json").open('w') as f:
+    file_path = pathlib.Path(__file__).parent / "owner.json"
+
+    with file_path.open('w') as f:
         json.dump({
             "url_": url_,
             "apt_": apt_,
@@ -29,7 +35,11 @@ def save_owner_config(**kwargs):
 
 
 def get_guests():
-    with (pathlib.Path(__file__).parent / "guests.yml").open() as f:
+    if not guest_path.exists():
+        guest_path.touch()
+        return []
+
+    with guest_path.open() as f:
         output = yaml.safe_load(f)
 
     if output is None:
@@ -39,11 +49,36 @@ def get_guests():
 
 
 def get_tenant():
-    with (pathlib.Path(__file__).parent / "owner.json").open() as f:
+    file_path = pathlib.Path(__file__).parent / "owner.json"
+
+    if not file_path.exists():
+        file_path.touch()
+        return {}
+
+    with file_path.open() as f:
         output = json.load(f)
 
     if output is None:
         return {}
+
+    return output
+
+
+def dump(entry: typing.Dict[str, typing.List[typing.Dict[str, str]]]):
+    output = """"""
+    k, v = tuple(entry.items())[0]
+
+    output += k
+    output += "\n\t- "
+
+    max_len = max(len(x) for y in v for _, x in y.items())
+
+    for i, dct in enumerate(v):
+        _, v_ = tuple(dct.items())[0]
+        output += v_
+
+        if i + 1 != len(v):
+            output += "\n\t- "
 
     return output
 
@@ -106,17 +141,6 @@ def main():
         required=True,
         default=get_tenant().get("apt_", "")
     )
-
-    # we will need to save profiles. Have a blank profile on top
-    # if the blank profile is used, update the yaml file with it
-    # thinking about using a listbox for many guests, we could load existing and add to it
-
-    # parse guest data
-    # entry_data = {
-    #     k: v
-    #     for el in entry[name]
-    #     for k, v in el.items()
-    # }
 
     # main option
     guest_group = subparsers.add_parser(
@@ -195,7 +219,6 @@ def main():
     def add_guests(group):
         for i, entry in enumerate(get_guests()):
             name = next(k for k in entry.keys())
-            name_without_space = name.replace(' ', '')
             group.add_argument(
                 f"--user_{i}",
                 metavar=name,
@@ -206,26 +229,26 @@ def main():
 
     # saved profiles
     saved_profile_group = subparsers.add_parser(
-        "saved_profiles", prog="Saved Profiles",
-    ).add_mutually_exclusive_group(
+        "saved_profiles", prog="Saved Profiles"
+    ).add_argument_group("Profiles").add_mutually_exclusive_group(
         "Guest Profiles",
-        gooey_options=dict(title="Choose a Profile")
+        gooey_options=dict(title="Choose one Profile")
     )
 
     # View a Profile
     view_a_profile_group = subparsers.add_parser(
-        "view_profiles", prog="View a Profile",
-    ).add_mutually_exclusive_group(
+        "view_profiles", prog="View a Profile"
+    ).add_argument_group("Profiles").add_mutually_exclusive_group(
         "Guest Profiles",
-        gooey_options=dict(title="Choose a Profile")
+        gooey_options=dict(title="Choose one Profile")
     )
 
     # Delete profiles
     delete_profiles_group = subparsers.add_parser(
-        "delete_profiles", prog="Delete Profiles",
-    ).add_mutually_exclusive_group(
+        "delete_profiles", prog="Delete Profiles"
+    ).add_argument_group("Profiles").add_mutually_exclusive_group(
         "Guest Profiles",
-        gooey_options=dict(title="Choose a Profile")
+        gooey_options=dict(title="Choose one Profile")
     )
 
     # add entries
@@ -247,36 +270,132 @@ def main():
 
         selected = int(selected.replace("user_", ''))
 
-        return get_guests()[selected]
+        return get_guests()[selected], selected
+
+    def register_selection(args=arguments):
+        tenant_details = get_tenant()
+        selected, _ = get_selected(arguments)
+        profile = next(k for k in selected.keys())
+        selected = {
+            k: v
+            for el in selected[profile]
+            for k, v in el.items()
+        }
+
+        user_details = {**tenant_details, **selected}
+
+        return user_details
 
     if arguments.command == "owner_config":
+        # save teant info
         owner_details = vars(arguments)
         save_owner_config(**owner_details)
         print("Success!, the owner information has been updated :)")
 
     elif arguments.command == "saved_profiles":
-        # update default config with user info
+        # compile user details
+        user_details = register_selection(arguments)
 
         # run selenium portion
-        # status, error = register_my_car(**user_details)
-        status, error = True, None
+        status, error = register_my_car(**user_details)
+
         if status:
-            # TODO - when we submit, we can print the user profile like yaml dump string
             print("Success! You should receive an email and text message now :)")
 
         else:
             raise error
 
     elif arguments.command == "delete_profiles":
-        # TODO - when we submit, we can print the user profile like yaml dump string
-        print(arguments)
+        # get selected profile
+        selected, index = get_selected(arguments)
+        selected = dump(selected)
+
+        guests_list = get_guests()
+        _ = guests_list.pop(index)
+
+        try:
+            with guest_path.open('w') as f:
+                yaml.dump(guests_list, f)
+
+            print("Successfully deleted profile:\n")
+            print(selected)
+
+        except Exception as e:
+            print("Failed to delete the profile!\n")
+            raise e
 
     elif arguments.command == "view_profiles":
-        selected = get_selected(arguments)
+        # get selected profile
+        selected, _ = get_selected(arguments)
+        selected = dump(selected)
         print(selected)
+        print(
+            "\n\nTo overwrite, go to 'New Guest' and add a profile with this profile name"
+        )
 
     else:
-        print("New Guest Stuff")
+        # identify guest info
+        guest = vars(arguments)
+        profile = guest["Profile"]
+
+        # if this profile exists, pop it
+        guest_list = get_guests()
+
+        index = [
+            i
+            for i, v in enumerate(guest_list)
+            if profile in v.keys()
+        ]
+
+        if len(index) > 0:
+            _ = guest_list.pop(index[0])
+
+        # now we can add the new item
+        entry = {profile: []}
+        keys_to_allow = ('Color', 'Email', 'Make', 'Model', 'Phone', 'Plate')
+
+        for k, v in guest.items():
+            if k not in keys_to_allow:
+                continue
+
+            entry[profile].append(
+                {helper(k): v}
+            )
+
+        guest_list.append(entry)
+
+        # save to guests yaml file
+        try:
+            with guest_path.open('w') as f:
+                yaml.dump(guest_list, f)
+
+            if len(index) > 0:
+                print("Successfully updated the profile!")
+
+            else:
+                print("Successfully saved new profile!")
+
+        except Exception as _:
+            print("Unable to save this profile at the moment :(")
+
+        # register
+        guest_details = {
+            helper(k): v
+            for k, v in guest.items()
+            if k in keys_to_allow
+        }
+
+        tenant_details = get_tenant()
+        user_details = {**tenant_details, **guest_details}
+
+        # run selenium portion
+        # status, error = register_my_car(**user_details)
+
+        # if status:
+        #     print("Success! You should receive an email and text message now :)")
+
+        # else:
+        #     raise error
 
 
 if __name__ == '__main__':
