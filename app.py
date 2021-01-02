@@ -389,13 +389,13 @@ def main():
         user_details = {**tenant_details, **guest_details}
 
         # run selenium portion
-        # status, error = register_my_car(**user_details)
+        status, error = register_my_car(**user_details)
 
-        # if status:
-        #     print("Success! You should receive an email and text message now :)")
+        if status:
+            print("Success! You should receive an email and text message now :)")
 
-        # else:
-        #     raise error
+        else:
+            raise error
 
 
 if __name__ == '__main__':
