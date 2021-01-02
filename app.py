@@ -240,14 +240,14 @@ def main():
         details = vars(arguments)
         selected = next(
             k
-            for k, v in details
+            for k, v in details.items()
             if k.startswith('user_')
             if v
         )
 
         selected = int(selected.replace("user_", ''))
 
-        return get_guests()
+        return get_guests()[selected]
 
     if arguments.command == "owner_config":
         owner_details = vars(arguments)
@@ -255,7 +255,6 @@ def main():
         print("Success!, the owner information has been updated :)")
 
     elif arguments.command == "saved_profiles":
-        print(arguments)
         # update default config with user info
 
         # run selenium portion
@@ -273,7 +272,8 @@ def main():
         print(arguments)
 
     elif arguments.command == "view_profiles":
-        print(arguments)
+        selected = get_selected(arguments)
+        print(selected)
 
     else:
         print("New Guest Stuff")
