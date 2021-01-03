@@ -293,6 +293,11 @@ def main():
         print("Success!, the owner information has been updated :)")
 
     elif arguments.command == "saved_profiles":
+        
+        if len(get_tenant()) == 0:
+            print("Please configure the tenant information :)")
+            return
+
         # compile user details
         user_details = register_selection(arguments)
 
@@ -386,6 +391,11 @@ def main():
         }
 
         tenant_details = get_tenant()
+        
+        if len(tenant_details) == 0:
+            print("Please configure the tenant information :)")
+            return
+
         user_details = {**tenant_details, **guest_details}
 
         # run selenium portion
